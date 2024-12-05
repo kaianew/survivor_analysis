@@ -1,0 +1,403 @@
+---
+title: "Survivor Analysis (Lol)"
+output: html_notebook
+author: "Kaia Newman"
+---
+
+# Install and load packages
+```{r}
+install.packages("survivoR")
+install.packages("reticulate")
+library(reticulate)
+library(survivoR)
+py_install("networkx")
+py_config()
+networkx = import("networkx")
+matplotlib = import("matplotlib.pyplot")
+```
+
+# Find vote_history data and create nodes CSV file for Gephi
+```{r}
+data("vote_history", package = "survivoR")
+write.csv(vote_history, "vote_history.csv")
+
+# # Get subset for S20, Heroes vs. Villains
+# hvv = subset(vote_history, version_season == "US20")
+# hvv
+# 
+# # castaway_id can be unique node_ids
+# # label is name
+# # No group/"tribe" for now -- involves custom handling of nodes to change colors later 
+# # start/end will be latest sog_id
+# # For /now/, we'll elide details of people being on the jury but still having relationships with those still in the game.
+# hvv_nodes = data.frame(id = unique(hvv$castaway_id))
+# names = c()
+# ends = c()
+# for (castid in hvv_nodes$id) {
+#   # Get name
+#   this_guy = subset(hvv, castaway_id == castid)
+#   name = this_guy[[1, "castaway"]]
+#   names = c(names, name)
+#   
+#   # Make end the last sog_id seen for each castaway + 1
+#   end_sog = max(this_guy$sog_id)
+#   end_sog = end_sog + 1
+#   # Colby was voted out and then Jerry. I think all of the finalists should have 1 added to end
+#   # If name doesn't appear in voted_out column of hvv, add 1 to end
+#   if(!any(hvv$voted_out == name)) {
+#     end_sog = end_sog + 1
+#   }
+#   ends = c(ends, end_sog)
+#   print("hello!")
+#   print(end_sog)
+# }
+# hvv_nodes$label = names
+# hvv_nodes$start = 1
+# hvv_nodes$end = ends
+# hvv_nodes
+# 
+# write.csv(hvv_nodes, "hvv_nodes.csv", row.names = FALSE)
+```
+# Create edges CSV file for Gephi
+```{r}
+# # We want a vector of unique targets (vote col) for every sog. Then we'll create edges between all of the nodes who voted for each target (unless ego and alter are self).
+# targets = data.frame(sog = integer(),
+#                      target_vec = I(list()))
+# for (sog in unique(hvv$sog_id)) {
+#   sset = subset(hvv, sog_id == sog)
+#   names = c(unique(sset$vote))
+#   new_row = data.frame(sog = sog, target_vec = I(list(names)))
+#   targets = rbind(targets, new_row)
+# }
+# 
+# targets[[1, 2]]
+# targets[[2, 2]]
+# 
+# hvv_edges = data.frame(source = character(0),
+#                        target = character(0),
+#                        start = integer(0),
+#                        end = integer(0),
+#                        weight = integer(0))
+# # Loop through rounds of voting
+# for (round in unique(hvv$sog_id)) {
+#   # Find all the votes for the current round
+#   sset = subset(hvv, sog_id == round)
+#   
+#   # Find groups of people who voted for someone together
+#   voting_blocs = split(sset$castaway, sset$vote)
+#   for (bloc in voting_blocs) {
+#     # Check to see that the bloc is larger than 1
+#     if (length(bloc) > 1) {
+#       for(i in 1:(length(bloc)-1)) {
+#         for(j in (i+1):length(bloc)) {
+#           # Make new edge where the end is the min of the max sog ids for both players
+#           # Look up end sogs in the hvv_nodes file since those are updated so edges don't instantaneously disappear
+#           p1 = subset(hvv_nodes, label == bloc[i])
+#           p2 = subset(hvv_nodes, label == bloc[j])
+#           player_1_end = p1$end
+#           player_2_end = p2$end
+#           end = min(player_1_end, player_2_end)
+# 
+#           # Make sure sources and targets are in a consistent order
+#           source = min(bloc[i], bloc[j])
+#           target = max(bloc[i], bloc[j])
+# 
+#           new_edge = data.frame(source = as.character(source),
+#                                 target = as.character(target),
+#                                 start = as.integer(round),
+#                                 end = as.integer(end),
+#                                 weight = as.integer(1))
+# 
+#           # If edge already exists between these two people, end old edge and update weight in this new edge
+#           existing_edges = which(hvv_edges$source == source & hvv_edges$target == target)
+#           if (length(existing_edges) > 0) {
+#             # This edge can be seen multiple times before. So, we will want to take the one with the max start.
+#             max_start = existing_edges[which.max(hvv_edges$start[existing_edges])]
+#             # FIXME max_start is the current row index from tmp :(
+#             
+#             hvv_edges[max_start, "end"] = round
+#             new_edge$weight = hvv_edges[max_start, "weight"] + 1
+#           }
+#           if (!is.null(new_edge)) {
+#             hvv_edges = rbind(hvv_edges, new_edge)
+#           }
+#         }
+#         
+#       }
+#     }
+#   }
+# }
+# hvv_edges
+# # Something still weird here, not sure if weights are updating properly. Jerri and Parvati vote together a lot so let's take a look
+# existing_edges = which(hvv_edges$source == "Jerri" & hvv_edges$target == "Parvati")
+# tmp = hvv_edges[existing_edges, ]
+# tmp
+# 
+# write.csv(hvv_edges, "hvv_edges.csv", row.names = FALSE)
+```
+
+# Make list of graphs which encode each game state
+```{r}
+# py_config()
+# networkx = import("networkx")
+# # Make list of graphs active during each sog
+# s20 = list()
+# 
+# # Create empty graphs for each sog
+# max_sog = which.max(hvv_nodes$end)
+# max_sog = hvv_nodes[max_sog, "end"]
+# 
+# for (round in 1:max_sog) {
+#   s20 = c(s20, networkx$Graph())
+# }
+# 
+# # Now go through nodes in hvv_nodes and add them to each graph they exist in. Don't need ends to have one extra, that was for animation purposes.
+# for (i in 1:nrow(hvv_nodes)) {
+#   row = hvv_nodes[i, ]
+#   for (j in 1:(row$end - 1)) {
+#     s20[[j]]$add_node(row$id, label=row$label)
+#   }
+# }
+# 
+# # Edges similarly will need one chopped off the end in our hvv_edges df
+# print(hvv_edges)
+# 
+# # Gephi may work with labels as well as ids, but NetworkX only works with ids. Let's write a quick function to find node id by label in our hvv_nodes df.
+# find_id_by_label = function(l) {
+#   row_num = which(hvv_nodes$label == l)
+#   row = hvv_nodes[row_num, ]
+#   return(row$id)
+# }
+# 
+# for (i in 1:nrow(hvv_edges)) {
+#   # Add edge to each graph it exists in, with the weight it exists at
+#   edges_row = hvv_edges[i, ]
+#   # This edge exists from start to end, inclusive.
+#   for (j in (hvv_edges[i, "start"]):(hvv_edges[i, "end"] - 1)) {
+#     src_id = find_id_by_label(edges_row$source)
+#     target_id = find_id_by_label(edges_row$target)
+#     s20[[j]]$add_edge(src_id, target_id, weight=edges_row$weight)
+#   }
+# }
+# 
+# print(s20[[1]]$edges(data=TRUE))
+```
+
+# Make Shannon Entropy dataframe and networks
+```{r}
+library(entropy)
+# castaways has info on the names of the ids, so I can look up the name using that df
+data("castaways", package = "survivoR")
+
+# Want dataframe that has the following data from seasons 1-20
+# Player id | name | season num | sog | voted out this sog (boolean) | cumulative shannon entropy (SE)
+# Cumulative SE function requires a vector of weights for all other people in the game, where weights are how many times they voted together
+
+# Use regex and subset to get initial dataframe that has all the data from US1-20
+pattern = "^US(0[1-9]|1[0-9]|20)$"
+matches = grepl(pattern, vote_history$version_season)
+data = subset(vote_history, matches)
+data
+
+se_dataframe = data.frame(pid = numeric(),
+                          name = character(),
+                          season_num = numeric(),
+                          sog_num = numeric(),
+                          voted_out = logical(),
+                          immune = logical(),
+                          tribe_stat = character(),
+                          shannon_e = numeric(),
+                          shannon_e_sq = numeric())
+
+# Create network_list for visualizations
+network_list = list()
+
+# Loop through seasons
+for (seas in 1:20) {
+  # Subset this season
+  season_data = subset(data, season == seas)
+  
+  # We make a matrix between players and all other players to hold weights for SE computation
+  all_players = unique(season_data$castaway_id)
+  num_xes = length(all_players)
+  mat = matrix(0, nrow = num_xes, ncol = num_xes)
+  for (i in 1:(nrow(mat))) {
+    mat[i, i] = NA
+  }
+  vote_matrix = as.data.frame(mat)
+  colnames(vote_matrix) = all_players
+  rownames(vote_matrix) = all_players
+  
+  id_booted = ""
+  
+  # Create sog_data, which only holds data for this stage of the game
+  for (sog in unique(season_data$sog_id)) {
+    sog_data = subset(season_data, sog_id == sog)
+    # Get the person and ID booted so we know who was voted out this stage
+    person_booted = sog_data[1, "voted_out"]
+    id_booted = sog_data[1, "voted_out_id"]
+
+    # For each row in the sog data, calculate the current Shannon entropy of the player for insertion into the se_dataframe
+    for (i in 1:(nrow(sog_data))) {
+      curr_sog_player = sog_data[i,]
+      gone = (curr_sog_player$castaway == person_booted) # For voted_out col, which states whether or not they were voted out (the thing we're trying to predict)
+      immunity = (!is.na(curr_sog_player$immunity))
+      tribe_status = curr_sog_player$tribe_status
+
+      # Calculate shannon entropy
+      player_id = curr_sog_player$castaway_id
+      # Get column of voting matrix for current player
+      shannon_vec = vote_matrix[,player_id]
+      shannon_vec = na.omit(shannon_vec)
+      se = entropy(shannon_vec)
+
+      # This is meant to normalize the entropy value by how many people are still in the network. Helps with season size as well.
+      se = se / length(shannon_vec)
+      se_sq = se^2
+
+      # Make new row and calculate all values
+      new_row = data.frame(pid = player_id,
+                          name = curr_sog_player$castaway,
+                          season_num = seas,
+                          sog_num = sog,
+                          voted_out = gone,
+                          immune = immunity,
+                          tribe_stat = tribe_status,
+                          shannon_e = se,
+                          shannon_e_sq = se_sq)
+      # Add row to se_dataframe
+      se_dataframe = rbind(se_dataframe, new_row)
+    }
+
+    # After a stage of the game, update weights in vote matrix
+    # We want a vector of unique targets. Then we'll increment the weight between all of the nodes who voted for each target (unless ego and alter are self).
+    voting_blocs = split(sog_data$castaway_id, sog_data$vote_id)
+    for (bloc in voting_blocs) {
+      # Check to see that the bloc is larger than 1
+      if (length(bloc) > 1) {
+        pairs = combn(bloc, 2)
+        pairs = as.data.frame(t(pairs))
+        # Update the weights of all pairs in the matrix
+        for (row in 1:nrow(pairs)) {
+          P1 = pairs[row, "V1"]
+          P2 = pairs[row, "V2"]
+          vote_matrix[P1, P2] = vote_matrix[P1, P2] + 1
+          vote_matrix[P2, P1] = vote_matrix[P2, P1] + 1
+        }
+      }
+    }
+  } # sog loop
+  # After a season, create a final voting network and visualize it. Put it on the slides
+  graph = networkx$Graph()
+  # $add_node(row$id, label=row$label)
+  for (node in all_players) {
+    # These are IDs, so we should make sure we retrieve the names as well
+    person_row = castaways[castaways$castaway_id == node, ]
+    name = person_row[1,]$castaway
+    graph$add_node(node, label=name)
+  }
+  
+  pairs = combn(all_players, 2)
+  pairs = as.data.frame(t(pairs))
+  # Check if the weight in the vote_matrix is 0 for a given couple
+  # If it's not, add an edge to the graph
+  for (row in 1:nrow(pairs)) {
+    P1 = pairs[row, "V1"]
+    P2 = pairs[row, "V2"]
+    if (vote_matrix[P1, P2] != 0) {
+      graph$add_edge(P1, P2, weight=vote_matrix[P1, P2])
+    }
+  }
+  
+  # Add network to list
+  network_list = c(network_list, graph)
+  print(vote_matrix)
+} # season loop
+se_dataframe
+```
+
+# Make networks into PNGs
+```{r}
+ctr = 0
+for (network in network_list) {
+  edge_weights = networkx$get_edge_attributes(network, "weight")
+  # Plot and save the network as a PNG
+  edge_thickness = sapply(edge_weights, function(w) w * 2) # Scale weights for better visibility
+# Generate node positions
+  pos = networkx$spring_layout(network, k=5)
+  labels = networkx$get_node_attributes(network, "label")
+  matplotlib$figure(figsize = c(6, 6)) # Set figure size
+  networkx$draw(network, pos = pos, with_labels = FALSE, node_color = "skyblue", node_size = 1000, font_size = 15, width=unname(edge_weights), edge_color="grey")
+  networkx$draw_networkx_labels(network, pos, labels, font_size=12, font_color='black')
+  matplotlib$savefig(paste0(ctr, ".png"), format = "png", dpi = 300) # Save as PNG
+  ctr = ctr + 1
+}
+```
+
+# Basic network metrics
+```{r}
+# It should include at a minimum, number of nodes, average degree, average clustering, and size of the largest component (as a percentage of the total number of nodes).
+
+# I'm silly and I should have done this project in Python or used igraph (something not in Python!!)
+
+# Create dataframe that looks like this:
+# Num nodes | average (weighted) degree | average (weighted) clustering | size of largest component (as a percentage) | average weight | average num of partners over the average weight 
+network_df = data.frame(num_nodes = numeric(),
+                        avg_degree = numeric(),
+                        avg_clustering = numeric(),
+                        percent_component = character(),
+                        avg_weight = numeric(),
+                        avg_strong_ties = numeric())
+ctr = 0
+for (network in network_list) {
+  clustering_weighed = networkx$clustering(network, weight="weight")
+  average_clustering = mean(as.numeric(clustering_weighed))
+  num_nodes = network$number_of_nodes()
+  degrees = network$degree(weight="weight")
+  networkx$write_graphml(network, paste0(ctr, "graph.graphml"))
+  ctr = ctr + 1
+}
+```
+
+
+# Run logistic regression
+```{r}
+se_dataframe$tribe_stat = relevel(factor(se_dataframe$tribe_stat), ref="Original")
+model = glm(voted_out ~ season_num + immune + tribe_stat + shannon_e + shannon_e_sq, data = se_dataframe, family = binomial)
+summary(model)
+
+se_dataframe = na.omit(se_dataframe)
+
+# Make binned proportions plot
+# First, we actually want to invert voted_out, since the thing we're looking for is whether or not you get to stay
+se_dataframe$stayed = !se_dataframe$voted_out
+# Make SE larger for human consumption
+se_dataframe$shannon_e = se_dataframe$shannon_e * 100
+# Bin SE for X axis
+se_dataframe$bins = cut(se_dataframe$shannon_e, breaks=10)
+
+# Percentage in bins
+# For each unique bin in bins, count number of TRUEs in stayed column
+percents = numeric()
+total_stayed = sum(se_dataframe$stayed == TRUE)
+sort_bins = sort(unique(se_dataframe$bins))
+for (bin in sort_bins) {
+  sset = subset(se_dataframe, bins == bin)
+  here = sum(sset$stayed == TRUE)
+  percent = here / total_stayed
+  percents = append(percents, percent)
+}
+
+print(percents)
+
+plotframe = data.frame(bins = factor(sort_bins, levels = sort_bins),
+                       percent = percents)
+
+plot = ggplot(plotframe, aes(x = sort_bins, y = percent)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(x = "Binned Shannon Entropy", y = "Percentage of Total Successes (Escaped Vote)", title = "Bridging social capital seems slightly more useful") +
+  theme_minimal()
+
+ggsave("binned_percentage_success.png", plot = plot, width = 8, height = 6, dpi = 300)
+```
+

@@ -1,0 +1,220 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <key id="d1" for="edge" attr.name="weight" attr.type="double" />
+  <key id="d0" for="node" attr.name="label" attr.type="string" />
+  <graph edgedefault="undirected">
+    <node id="US0266">
+      <data key="d0">Carolina</data>
+    </node>
+    <node id="US0269">
+      <data key="d0">Sandy</data>
+    </node>
+    <node id="US0270">
+      <data key="d0">Spencer</data>
+    </node>
+    <node id="US0271">
+      <data key="d0">Sydney</data>
+    </node>
+    <node id="US0272">
+      <data key="d0">Joe</data>
+    </node>
+    <node id="US0278">
+      <data key="d0">Taj</data>
+    </node>
+    <node id="US0280">
+      <data key="d0">Stephen</data>
+    </node>
+    <node id="US0281">
+      <data key="d0">J.T.</data>
+    </node>
+    <node id="US0267">
+      <data key="d0">Candace</data>
+    </node>
+    <node id="US0268">
+      <data key="d0">Jerry</data>
+    </node>
+    <node id="US0273">
+      <data key="d0">Brendan</data>
+    </node>
+    <node id="US0274">
+      <data key="d0">Tyson</data>
+    </node>
+    <node id="US0275">
+      <data key="d0">Sierra</data>
+    </node>
+    <node id="US0276">
+      <data key="d0">Debbie</data>
+    </node>
+    <node id="US0277">
+      <data key="d0">Coach</data>
+    </node>
+    <node id="US0279">
+      <data key="d0">Erinn</data>
+    </node>
+    <edge source="US0269" target="US0270">
+      <data key="d1">1.0</data>
+    </edge>
+    <edge source="US0269" target="US0271">
+      <data key="d1">1.0</data>
+    </edge>
+    <edge source="US0269" target="US0272">
+      <data key="d1">1.0</data>
+    </edge>
+    <edge source="US0269" target="US0278">
+      <data key="d1">1.0</data>
+    </edge>
+    <edge source="US0269" target="US0280">
+      <data key="d1">1.0</data>
+    </edge>
+    <edge source="US0269" target="US0281">
+      <data key="d1">1.0</data>
+    </edge>
+    <edge source="US0270" target="US0271">
+      <data key="d1">2.0</data>
+    </edge>
+    <edge source="US0270" target="US0272">
+      <data key="d1">2.0</data>
+    </edge>
+    <edge source="US0270" target="US0278">
+      <data key="d1">1.0</data>
+    </edge>
+    <edge source="US0270" target="US0280">
+      <data key="d1">2.0</data>
+    </edge>
+    <edge source="US0270" target="US0281">
+      <data key="d1">2.0</data>
+    </edge>
+    <edge source="US0271" target="US0272">
+      <data key="d1">4.0</data>
+    </edge>
+    <edge source="US0271" target="US0278">
+      <data key="d1">2.0</data>
+    </edge>
+    <edge source="US0271" target="US0280">
+      <data key="d1">3.0</data>
+    </edge>
+    <edge source="US0271" target="US0281">
+      <data key="d1">3.0</data>
+    </edge>
+    <edge source="US0272" target="US0278">
+      <data key="d1">2.0</data>
+    </edge>
+    <edge source="US0272" target="US0280">
+      <data key="d1">3.0</data>
+    </edge>
+    <edge source="US0272" target="US0281">
+      <data key="d1">3.0</data>
+    </edge>
+    <edge source="US0278" target="US0280">
+      <data key="d1">7.0</data>
+    </edge>
+    <edge source="US0278" target="US0281">
+      <data key="d1">5.0</data>
+    </edge>
+    <edge source="US0278" target="US0275">
+      <data key="d1">2.0</data>
+    </edge>
+    <edge source="US0278" target="US0276">
+      <data key="d1">1.0</data>
+    </edge>
+    <edge source="US0278" target="US0277">
+      <data key="d1">1.0</data>
+    </edge>
+    <edge source="US0278" target="US0279">
+      <data key="d1">3.0</data>
+    </edge>
+    <edge source="US0280" target="US0281">
+      <data key="d1">8.0</data>
+    </edge>
+    <edge source="US0280" target="US0275">
+      <data key="d1">1.0</data>
+    </edge>
+    <edge source="US0280" target="US0276">
+      <data key="d1">2.0</data>
+    </edge>
+    <edge source="US0280" target="US0277">
+      <data key="d1">2.0</data>
+    </edge>
+    <edge source="US0280" target="US0279">
+      <data key="d1">4.0</data>
+    </edge>
+    <edge source="US0281" target="US0274">
+      <data key="d1">1.0</data>
+    </edge>
+    <edge source="US0281" target="US0275">
+      <data key="d1">1.0</data>
+    </edge>
+    <edge source="US0281" target="US0276">
+      <data key="d1">1.0</data>
+    </edge>
+    <edge source="US0281" target="US0277">
+      <data key="d1">2.0</data>
+    </edge>
+    <edge source="US0281" target="US0279">
+      <data key="d1">4.0</data>
+    </edge>
+    <edge source="US0268" target="US0273">
+      <data key="d1">1.0</data>
+    </edge>
+    <edge source="US0268" target="US0274">
+      <data key="d1">1.0</data>
+    </edge>
+    <edge source="US0268" target="US0275">
+      <data key="d1">1.0</data>
+    </edge>
+    <edge source="US0268" target="US0276">
+      <data key="d1">1.0</data>
+    </edge>
+    <edge source="US0268" target="US0277">
+      <data key="d1">1.0</data>
+    </edge>
+    <edge source="US0268" target="US0279">
+      <data key="d1">1.0</data>
+    </edge>
+    <edge source="US0273" target="US0274">
+      <data key="d1">2.0</data>
+    </edge>
+    <edge source="US0273" target="US0275">
+      <data key="d1">3.0</data>
+    </edge>
+    <edge source="US0273" target="US0276">
+      <data key="d1">2.0</data>
+    </edge>
+    <edge source="US0273" target="US0277">
+      <data key="d1">2.0</data>
+    </edge>
+    <edge source="US0273" target="US0279">
+      <data key="d1">2.0</data>
+    </edge>
+    <edge source="US0274" target="US0275">
+      <data key="d1">2.0</data>
+    </edge>
+    <edge source="US0274" target="US0276">
+      <data key="d1">3.0</data>
+    </edge>
+    <edge source="US0274" target="US0277">
+      <data key="d1">3.0</data>
+    </edge>
+    <edge source="US0274" target="US0279">
+      <data key="d1">3.0</data>
+    </edge>
+    <edge source="US0275" target="US0276">
+      <data key="d1">2.0</data>
+    </edge>
+    <edge source="US0275" target="US0277">
+      <data key="d1">2.0</data>
+    </edge>
+    <edge source="US0275" target="US0279">
+      <data key="d1">3.0</data>
+    </edge>
+    <edge source="US0276" target="US0277">
+      <data key="d1">5.0</data>
+    </edge>
+    <edge source="US0276" target="US0279">
+      <data key="d1">2.0</data>
+    </edge>
+    <edge source="US0277" target="US0279">
+      <data key="d1">2.0</data>
+    </edge>
+  </graph>
+</graphml>
